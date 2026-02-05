@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 origins = [
     "https://hello-4ch-frontend-952043957190.us-east1.run.app",  
-    "http://localhost:8080",
+    "http://localhost:8081",
 ]
 
 CORS(app, origins=origins)  
