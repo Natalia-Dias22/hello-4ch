@@ -1,12 +1,20 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+
+origins = [
+    "https://hello-4ch-frontend-952043957190.us-east1.run.app",  
+    "http://localhost:8080",
+]
+
+CORS(app, origins=origins)  
 
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'OK'}), 200
 
-# Novo endpoint - versão 2.0  ← Adicione um comentário
 @app.route('/version', methods=['GET'])
 def version():
     return jsonify({
