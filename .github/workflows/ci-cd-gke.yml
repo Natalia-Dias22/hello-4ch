@@ -1,0 +1,58 @@
+name: Deploy to GKE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  PROJECT_ID: hello-4ch-93603-486512
+  GKE_CLUSTER: hello-4ch
+  GKE_REGION: us-central1
+  IMAGE: hello-4ch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+      
+      - name: Build Docker image
+        run: |
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE }}:${{ github.sha }} \
+                       -t gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE }}:latest .
+      
+      - name: Push to GCR
+        run: |
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE }}:${{ github.sha }}
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE }}:latest
+      
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region=${{ env.GKE_REGION }} \
+            --project=${{ env.PROJECT_ID }}
+      
+      - name: Deploy to GKE
+        run: |
+          kubectl set image deployment/${{ env.IMAGE }} \
+            app=gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE }}:${{ github.sha }}
+          kubectl rollout status deployment/${{ env.IMAGE }}
+      
+      - name: Show status
+        run: |
+          kubectl get pods
+          kubectl get service ${{ env.IMAGE }}

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-4ch
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-4ch
+  template:
+    metadata:
+      labels:
+        app: hello-4ch
+    spec:
+      containers:
+      - name: app
+        image: gcr.io/hello-4ch-93603-486512/hello-4ch:latest
+
+        ports:
+        - containerPort: 8080
